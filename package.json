@@ -1,0 +1,19 @@
+{
+  "name": "calendar-booking",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "frontend:dev": "npm --workspace calendar-booking-frontend run dev",
+    "frontend:build": "npm --workspace calendar-booking-frontend run build",
+    "frontend:mock": "npm --workspace calendar-booking-frontend run mock",
+    "frontend:dev:all": "npm --workspace calendar-booking-frontend run dev:all",
+    "generate:openapi": "npm --workspace calendar-booking-frontend run generate:openapi"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "^0.62.0",
+    "@typespec/http": "^0.62.0",
+    "@typespec/openapi3": "^0.62.0"
+  }
+}

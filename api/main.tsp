@@ -170,16 +170,61 @@ model CreatedBookingResponse {
 namespace Admin {
   @route("/owner-profile")
   @doc("Returns the single predefined calendar owner profile used by the admin area.")
+  @opExample(#{
+    returnType: #{
+      id: "owner-default",
+      displayName: "Calendar Owner",
+      email: "owner@example.com"
+    }
+  })
   @get
   op getOwnerProfile(): CalendarOwnerProfile;
 
   @route("/event-types")
   @doc("Creates an event type with owner-defined id, name, description and duration.")
+  @opExample(#{
+    parameters: #{
+      request: #{
+        id: "design-sync",
+        name: "Design sync",
+        description: "A focused session to align product and interface decisions.",
+        durationMinutes: 45
+      }
+    },
+    returnType: #{
+      statusCode: 201,
+      eventType: #{
+        id: "design-sync",
+        name: "Design sync",
+        description: "A focused session to align product and interface decisions.",
+        durationMinutes: 45,
+        createdAt: utcDateTime.fromISO("2026-07-29T09:00:00Z")
+      }
+    }
+  })
   @post
   op createEventType(@body request: CreateEventTypeRequest): CreatedEventTypeResponse | ErrorResponse;
 
   @route("/event-types")
   @doc("Lists all event types configured by the calendar owner.")
+  @opExample(#{
+    returnType: #[
+      #{
+        id: "intro-call",
+        name: "Intro call",
+        description: "A short meeting to understand the request and agree on next steps.",
+        durationMinutes: 30,
+        createdAt: utcDateTime.fromISO("2026-07-20T08:30:00Z")
+      },
+      #{
+        id: "product-review",
+        name: "Product review",
+        description: "A detailed session about an interface, API, or product roadmap.",
+        durationMinutes: 60,
+        createdAt: utcDateTime.fromISO("2026-07-21T10:00:00Z")
+      }
+    ]
+  })
   @get
   op listEventTypes(): EventType[];
 
@@ -188,6 +233,32 @@ namespace Admin {
   Lists upcoming confirmed bookings across all event types in one chronological list.
   Results are ordered by startsAt ascending.
   """)
+  @opExample(#{
+    returnType: #[
+      #{
+        id: "bk-1001",
+        eventTypeId: "intro-call",
+        eventTypeName: "Intro call",
+        durationMinutes: 30,
+        startsAt: utcDateTime.fromISO("2026-07-30T08:00:00Z"),
+        endsAt: utcDateTime.fromISO("2026-07-30T08:30:00Z"),
+        guest: #{ name: "Maria Orlova", email: "maria@example.com" },
+        status: BookingStatus.confirmed,
+        createdAt: utcDateTime.fromISO("2026-07-28T12:15:00Z")
+      },
+      #{
+        id: "bk-1002",
+        eventTypeId: "product-review",
+        eventTypeName: "Product review",
+        durationMinutes: 60,
+        startsAt: utcDateTime.fromISO("2026-07-31T11:00:00Z"),
+        endsAt: utcDateTime.fromISO("2026-07-31T12:00:00Z"),
+        guest: #{ name: "Alex Petrov", email: "alex@example.com" },
+        status: BookingStatus.confirmed,
+        createdAt: utcDateTime.fromISO("2026-07-28T14:40:00Z")
+      }
+    ]
+  })
   @get
   op listUpcomingBookings(): Booking[];
 }
@@ -196,6 +267,28 @@ namespace Admin {
 @doc("Public guest API for viewing available booking types.")
 namespace BookingTypes {
   @doc("Lists guest-visible event types with name, description and duration.")
+  @opExample(#{
+    returnType: #[
+      #{
+        id: "intro-call",
+        name: "Intro call",
+        description: "A short meeting to understand the request and agree on next steps.",
+        durationMinutes: 30
+      },
+      #{
+        id: "product-review",
+        name: "Product review",
+        description: "A detailed session about an interface, API, or product roadmap.",
+        durationMinutes: 60
+      },
+      #{
+        id: "design-sync",
+        name: "Design sync",
+        description: "A focused session to align product and interface decisions.",
+        durationMinutes: 45
+      }
+    ]
+  })
   @get
   op list(): BookingTypeSummary[];
 
@@ -207,6 +300,19 @@ namespace BookingTypes {
   The response excludes all startsAt timestamps already occupied by any booking,
   regardless of event type.
   """)
+  @opExample(#{
+    parameters: #{ eventTypeId: "intro-call" },
+    returnType: #{
+      eventTypeId: "intro-call",
+      windowStartsOn: plainDate.fromISO("2026-07-29"),
+      windowEndsOn: plainDate.fromISO("2026-08-12"),
+      slots: #[
+        #{ startsAt: utcDateTime.fromISO("2026-07-30T08:00:00Z"), endsAt: utcDateTime.fromISO("2026-07-30T08:30:00Z") },
+        #{ startsAt: utcDateTime.fromISO("2026-07-30T08:30:00Z"), endsAt: utcDateTime.fromISO("2026-07-30T09:00:00Z") },
+        #{ startsAt: utcDateTime.fromISO("2026-07-31T10:00:00Z"), endsAt: utcDateTime.fromISO("2026-07-31T10:30:00Z") }
+      ]
+    }
+  })
   @get
   op getAvailability(@path eventTypeId: EventTypeId): AvailabilityWindow | ErrorResponse;
 }
@@ -222,6 +328,29 @@ namespace GuestBookings {
   - startsAt is outside the current 14-day booking window;
   - another booking already has the same startsAt, even for another event type.
   """)
+  @opExample(#{
+    parameters: #{
+      request: #{
+        eventTypeId: "intro-call",
+        startsAt: utcDateTime.fromISO("2026-07-30T08:30:00Z"),
+        guest: #{ name: "Elena Smirnova", email: "elena@example.com" }
+      }
+    },
+    returnType: #{
+      statusCode: 201,
+      booking: #{
+        id: "bk-1003",
+        eventTypeId: "intro-call",
+        eventTypeName: "Intro call",
+        durationMinutes: 30,
+        startsAt: utcDateTime.fromISO("2026-07-30T08:30:00Z"),
+        endsAt: utcDateTime.fromISO("2026-07-30T09:00:00Z"),
+        guest: #{ name: "Elena Smirnova", email: "elena@example.com" },
+        status: BookingStatus.confirmed,
+        createdAt: utcDateTime.fromISO("2026-07-29T09:10:00Z")
+      }
+    }
+  })
   @post
   op create(@body request: CreateBookingRequest): CreatedBookingResponse | ErrorResponse;
 }

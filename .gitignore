@@ -1,5 +1,15 @@
 # Default ignored files
 /shelf/
+/node_modules
 
 ### IntelliJ IDEA ###
 .idea
+
+### Frontend ###
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.generated
+frontend/*.tsbuildinfo
+frontend/vite.config.d.ts
+frontend/vite.config.js
